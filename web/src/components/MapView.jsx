@@ -1,4 +1,4 @@
-// MapView.js
+// MapView.jsx
 import React, { useEffect, useState } from "react";
 import {
   MapContainer,
@@ -12,17 +12,19 @@ import { getRoutes, getStops, subscribeLiveBuses } from "../lib/routeApi";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Bus + Stop icons
+// Custom icons
 const busIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61205.png",
-  iconSize: [28, 28],
+  iconSize: [32, 32],
+  className: "drop-shadow-lg",
 });
 const stopIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-  iconSize: [20, 20],
+  iconSize: [24, 24],
+  className: "drop-shadow-md",
 });
 
-// Auto-zoom to fit selected route
+// Auto-zoom helper
 function ZoomToRoute({ route }) {
   const map = useMap();
   useEffect(() => {
@@ -38,14 +40,13 @@ export default function MapView({
   selectedRoute,
   height = "100%",
   width = "100%",
-  busPosition = null, // simulated bus location
-  routePath = [],     // simulated route polyline
+  busPosition = null,
+  routePath = [],
 }) {
   const [routes, setRoutes] = useState([]);
   const [stops, setStops] = useState([]);
   const [liveBuses, setLiveBuses] = useState({});
 
-  // fetch routes, stops + subscribe to live buses
   useEffect(() => {
     getRoutes().then((d) => setRoutes(d?.features || []));
     getStops().then((d) => setStops(d?.features || []));
@@ -62,15 +63,16 @@ export default function MapView({
   }, []);
 
   const visibleRoutes = selectedRoute
-    ? routes.filter((r) => r.properties.route_id === selectedRoute.properties.route_id)
+    ? routes.filter(
+        (r) => r.properties.route_id === selectedRoute.properties.route_id
+      )
     : routes;
 
-  // ✅ Fix: only filter stops if backend provides route_id
   const visibleStops = selectedRoute
     ? stops.filter((s) =>
         s.properties.route_id
           ? s.properties.route_id === selectedRoute.properties.route_id
-          : true // fallback → show all stops if no route_id
+          : true
       )
     : stops;
 
@@ -81,85 +83,104 @@ export default function MapView({
     : [28.61, 77.20];
 
   return (
-    <MapContainer center={defaultCenter} zoom={12} style={{ height, width }}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
-      />
-      <ZoomToRoute route={selectedRoute} />
-
-      {/* Routes */}
-      {visibleRoutes.map((r) => (
-        <Polyline
-          key={r.properties.route_id}
-          positions={r.geometry.coordinates.map((c) => [c[1], c[0]])}
-          color={
-            selectedRoute?.properties.route_id === r.properties.route_id
-              ? "#2563EB"
-              : "#9CA3AF"
-          }
-          weight={4}
+    <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+      <MapContainer center={defaultCenter} zoom={12} style={{ height, width }}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> · <a href="https://hot.openstreetmap.org/">HOT</a>'
         />
-      ))}
+        <ZoomToRoute route={selectedRoute} />
 
-      {/* Stops */}
-      {visibleStops.map((s) => (
-        <Marker
-          key={s.properties.stop_id}
-          position={[s.geometry.coordinates[1], s.geometry.coordinates[0]]}
-          icon={stopIcon}
-        >
-          <Popup>
-            <div style={{ minWidth: 160 }}>
-              <strong>{s.properties.name}</strong>
-              <br />
-              <small className="text-gray-600">{s.properties.stop_id}</small>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+        {/* Routes */}
+        {visibleRoutes.map((r) => (
+          <Polyline
+            key={r.properties.route_id}
+            positions={r.geometry.coordinates.map((c) => [c[1], c[0]])}
+            color={
+              selectedRoute?.properties.route_id === r.properties.route_id
+                ? "#4F46E5" // indigo-600
+                : "#9CA3AF" // gray-400
+            }
+            weight={5}
+            opacity={0.8}
+          />
+        ))}
 
-      {/* Live buses */}
-      {displayedBuses.map((b) =>
-        b.lat && b.lon ? (
-          <Marker key={b.bus_id} position={[b.lat, b.lon]} icon={busIcon}>
+        {/* Stops */}
+        {visibleStops.map((s) => (
+          <Marker
+            key={s.properties.stop_id}
+            position={[s.geometry.coordinates[1], s.geometry.coordinates[0]]}
+            icon={stopIcon}
+          >
             <Popup>
-              <div style={{ minWidth: 180 }}>
-                <div>
-                  <strong>Bus {b.bus_id}</strong> · {b.route_id}
-                </div>
-                <div className="text-xs text-gray-600">
-                  Last update: {new Date(b.ts).toLocaleTimeString()}
-                </div>
-                <div style={{ marginTop: 6 }}>
-                  <span style={{ fontWeight: 600, color: "#047857" }}>
-                    ETA:{" "}
-                    {b.eta_min !== null && b.eta_min !== undefined
-                      ? `${b.eta_min} min`
-                      : "N/A"}
-                  </span>
-                </div>
+              <div className="p-2">
+                <p className="font-semibold text-indigo-700">
+                  {s.properties.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Stop ID: {s.properties.stop_id}
+                </p>
               </div>
             </Popup>
           </Marker>
-        ) : null
-      )}
+        ))}
 
-      {/* Simulated bus */}
-      {busPosition && (
-        <Marker position={busPosition} icon={busIcon}>
-          <Popup>
-            <strong>Simulated Bus 🚌</strong>
-            <br />
-            Live demo movement
-          </Popup>
-        </Marker>
-      )}
+        {/* Live buses */}
+        {displayedBuses.map(
+          (b) =>
+            b.lat &&
+            b.lon && (
+              <Marker key={b.bus_id} position={[b.lat, b.lon]} icon={busIcon}>
+                <Popup>
+                  <div className="p-2">
+                    <p className="font-bold text-green-700">
+                      🚌 Bus {b.bus_id}
+                    </p>
+                    <p className="text-sm text-gray-600">{b.route_id}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Last update:{" "}
+                      {new Date(b.ts).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="mt-1 text-green-600 font-semibold">
+                      ETA:{" "}
+                      {b.eta_min !== null && b.eta_min !== undefined
+                        ? `${b.eta_min} min`
+                        : "N/A"}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            )
+        )}
 
-      {/* Simulated polyline */}
-      {routePath.length > 0 && (
-        <Polyline positions={routePath} color="#10B981" weight={3} dashArray="4" />
-      )}
-    </MapContainer>
+        {/* Simulated bus */}
+        {busPosition && (
+          <Marker position={busPosition} icon={busIcon}>
+            <Popup>
+              <div className="p-2">
+                <p className="font-bold text-indigo-700">Simulated Bus</p>
+                <p className="text-sm text-gray-600">
+                  Demo live movement 🟢
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Simulated polyline */}
+        {routePath.length > 0 && (
+          <Polyline
+            positions={routePath}
+            color="#10B981" // emerald-500
+            weight={4}
+            dashArray="6"
+          />
+        )}
+      </MapContainer>
+    </div>
   );
 }

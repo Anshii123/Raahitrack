@@ -1,17 +1,18 @@
-:root { --accent:#0b5; --muted:#666; font-family: system-ui, Arial; }
-* { box-sizing: border-box; }
-body { margin:0; }
-header { display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid #eee; }
-header h1 { font-size:18px; margin:0; color:var(--accent); }
-.main { display:grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 50px); }
-.panel { padding:12px; border-right:1px solid #eee; }
-.map { height: calc(100vh - 50px); }
-.list { display:flex; flex-direction:column; gap:8px; }
-button { padding:6px 10px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:6px; text-align:left; }
-button.active { background:var(--accent); color:#fff; border-color:#087; }
-.small { color: var(--muted); font-size:13px; }
-@media (max-width:900px) {
-  .main { grid-template-columns: 1fr; }
-  .panel { border-right:none; border-bottom:1px solid #eee; }
-  .map { height: 60vh; }
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+.pipeline-step {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  margin: 10px 0;
+}
+.pipeline-line {
+  width: 4px;
+  flex: 1;
+  background: #10b981;
 }

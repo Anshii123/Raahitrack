@@ -1,3 +1,4 @@
+// TimelineView.jsx
 import React, { useEffect, useState } from "react";
 import socket from "../lib/liveClient"; // live bus updates
 import { getStops } from "../lib/routeApi"; // fetch stops from API
@@ -8,7 +9,7 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
   const [month, setMonth] = useState("January");
   const [stops, setStops] = useState([]);
 
-  // ✅ Hardcoded fallback schedules (monthly exchange data)
+  // ✅ Hardcoded fallback schedules
   const monthlySchedules = {
     January: [
       { time: "08:00", stop: "Ghaziabad ISBT" },
@@ -50,7 +51,6 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
       const filtered = allStops.filter(
         (s) => s.properties.route_id === selectedRoute.properties.route_id
       );
-      // Convert to { time, stop } format
       const stopsData = filtered.map((s, idx) => {
         const hh = String(8 + Math.floor(idx / 4)).padStart(2, "0");
         const mm = String((idx * 15) % 60).padStart(2, "0");
@@ -63,7 +63,7 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
     });
   }, [selectedRoute]);
 
-  // ✅ Live bus updates via socket
+  // ✅ Live bus updates
   useEffect(() => {
     socket.on("connect", () => console.log("Socket connected:", socket.id));
     socket.on("bus_update", (bus) => {
@@ -72,7 +72,7 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
     return () => socket.off("bus_update");
   }, []);
 
-  // ✅ Auto-advance current stop every 10s
+  // ✅ Auto-advance
   const schedule = stops.length > 0 ? stops : monthlySchedules[month] || [];
   useEffect(() => {
     if (schedule.length === 0) return;
@@ -93,18 +93,17 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
   }
 
   return (
-    <div className="p-6 bg-gray-50 h-full overflow-y-auto">
+    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 h-full overflow-y-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-blue-700">
-          🕒 Timeline - {selectedRoute.properties.route_long_name}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-indigo-700 flex items-center gap-2">
+          🕒 {selectedRoute.properties.route_long_name} Timeline
         </h2>
 
-        {/* Month Selector always available */}
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="border px-3 py-1 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border px-3 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400"
         >
           {Object.keys(monthlySchedules).map((m) => (
             <option key={m} value={m}>
@@ -114,31 +113,38 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
         </select>
       </div>
 
-      {/* Timeline */}
-      <div className="relative border-l-4 border-blue-500 pl-6">
+      {/* Timeline Pipeline */}
+      <div className="relative border-l-8 border-indigo-500 pl-8">
         {schedule.map((item, idx) => {
           const isActive = idx === currentStopIndex;
           return (
-            <div key={idx} className="mb-8 relative">
+            <div
+              key={idx}
+              className="mb-10 relative transition-all duration-300 hover:scale-[1.01]"
+            >
               {/* Circle marker */}
               <div
-                className={`absolute -left-4 w-6 h-6 rounded-full border-4 ${
+                className={`absolute -left-5 w-8 h-8 rounded-full border-4 shadow-lg ${
                   isActive
-                    ? "bg-green-500 border-green-700"
-                    : "bg-white border-blue-500"
+                    ? "bg-green-500 border-green-700 animate-pulse"
+                    : "bg-white border-indigo-500"
                 }`}
               ></div>
 
-              {/* Stop info */}
-              <div>
-                <p className="text-sm text-gray-600">{item.time}</p>
+              {/* Stop info card */}
+              <div
+                className={`p-4 rounded-xl shadow-md ${
+                  isActive ? "bg-green-50 border border-green-400" : "bg-white"
+                }`}
+              >
+                <p className="text-sm text-gray-500">{item.time}</p>
                 <p
                   className={`font-semibold ${
-                    isActive ? "text-green-600 text-lg" : "text-gray-800"
+                    isActive ? "text-green-700 text-lg" : "text-gray-800"
                   }`}
                 >
                   {item.stop}
-                  {isActive && " (Bus Here 🚌)"}
+                  {isActive && " 🚌 (Bus Here)"}
                 </p>
               </div>
             </div>
@@ -147,15 +153,22 @@ export default function TimelineView({ selectedRoute, busPosition, routePath }) 
       </div>
 
       {/* Live Bus Info */}
-      <div className="mt-6 bg-white shadow-md p-4 rounded-lg">
-        <h3 className="font-bold text-gray-700 mb-2">Live Bus Updates</h3>
+      <div className="mt-8 bg-white shadow-lg p-6 rounded-2xl border border-gray-100">
+        <h3 className="font-bold text-indigo-700 mb-3">Live Bus Updates</h3>
         {Object.values(buses).length === 0 ? (
           <p className="text-sm text-gray-500">No live buses yet</p>
         ) : (
           Object.values(buses).map((b) => (
-            <div key={b.bus_id} className="text-sm text-gray-700">
-              Bus {b.bus_id} → Lat: {b.lat}, Lon: {b.lon} @{" "}
-              {new Date(b.ts).toLocaleTimeString()}
+            <div
+              key={b.bus_id}
+              className="text-sm text-gray-700 bg-gray-50 rounded-md p-2 mb-2"
+            >
+              🚍 Bus <span className="font-bold">{b.bus_id}</span> → Lat:{" "}
+              {b.lat}, Lon: {b.lon} @{" "}
+              {new Date(b.ts).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           ))
         )}

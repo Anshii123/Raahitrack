@@ -10,7 +10,7 @@ import LoginPage from "./components/LoginPage";
 import SignUpPage from "./components/SignUpPage";
 import AdminView from "./components/AdminView";
 import UserView from "./components/UserView";
-import DriverView from "./components/DriverView"; // ✅ NEW
+import DriverView from "./components/DriverView";
 
 export default function App() {
   const [routes, setRoutes] = useState([]);
@@ -43,44 +43,67 @@ export default function App() {
   }, [selectedRouteId, routes]);
 
   // =====================
-  // Auth flow
+  // Auth flow (Login / Signup with bg image)
   // =====================
   if (!role) {
+    const bgStyle = {
+      backgroundImage:
+        "url('https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    };
     if (showSignup) {
-      return <SignUpPage onSignUp={() => setShowSignup(false)} />;
+      return (
+        <div
+          className="flex items-center justify-center h-screen w-screen"
+          style={bgStyle}
+        >
+          <SignUpPage onSignUp={() => setShowSignup(false)} />
+        </div>
+      );
     }
     return (
-      <LoginPage
-        onLogin={(r) => setRole(r)}
-        goToSignUp={() => setShowSignup(true)}
-      />
+      <div
+        className="flex items-center justify-center h-screen w-screen"
+        style={bgStyle}
+      >
+        <LoginPage
+          onLogin={(r) => setRole(r)}
+          goToSignUp={() => setShowSignup(true)}
+        />
+      </div>
     );
   }
 
-  // Admin View → driver location sender
+  // =====================
+  // Admin View
+  // =====================
   if (role === "admin") {
     return <AdminView onLogout={() => setRole(null)} />;
   }
 
-  // Driver View → sends live location
+  // =====================
+  // Driver View
+  // =====================
   if (role === "driver") {
     return <DriverView onLogout={() => setRole(null)} />;
   }
 
-  // User View → routes + map + live bus
+  // =====================
+  // User View
+  // =====================
   if (role === "user") {
     return (
       <UserView onLogout={() => setRole(null)}>
-        <div className="flex h-screen" style={{ minWidth: 900 }}>
+        <div className="flex h-screen bg-gradient-to-r from-gray-50 to-gray-100">
           {/* Left Sidebar */}
-          <div className="w-80 bg-gray-50 p-4 overflow-y-auto border-r shadow-md">
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-blue-700 flex items-center gap-2">
-                <span style={{ fontSize: 26 }}>🚍</span> Raahitrack
+          <div className="w-80 bg-white p-6 overflow-y-auto border-r shadow-lg">
+            <div className="mb-6 text-center">
+              <h1 className="text-3xl font-extrabold text-blue-700 flex items-center justify-center gap-2">
+                <span className="text-4xl">🚍</span> Raahi<span className="text-yellow-600">Track</span>
               </h1>
-              <p className="text-sm text-gray-600 mt-2">
-                A smart, low-bandwidth friendly real-time bus tracker for tier-2
-                towns. Click a route to view live buses, stops & schedule.
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                Smart, low-bandwidth friendly real-time bus tracker for tier-2 towns.
               </p>
             </div>
 
@@ -91,15 +114,15 @@ export default function App() {
             />
 
             <button
-              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+              className="mt-6 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 rounded-xl shadow-md transition"
               onClick={() => setShowTimeline(!showTimeline)}
             >
               {showTimeline ? "Show Map View" : "Show Timeline View"}
             </button>
           </div>
 
-          {/* Middle Section */}
-          <div className="flex-1 relative">
+          {/* Map / Timeline Section */}
+          <div className="flex-1 relative bg-gray-200">
             {showTimeline ? (
               <TimelineView selectedRoute={selectedRouteObj} />
             ) : (
@@ -108,18 +131,19 @@ export default function App() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-96 bg-white border-l shadow-lg overflow-y-auto">
+          <div className="w-96 bg-white border-l shadow-lg overflow-y-auto p-6">
             {selectedRouteObj ? (
               <>
                 <RouteDetail route={selectedRouteObj} />
                 <LiveTest />
               </>
             ) : (
-              <div className="p-6">
-                <h2 className="text-lg font-semibold">No route selected</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Select a route from the left to see stops, schedule and live
-                  buses.
+              <div className="text-center mt-20">
+                <h2 className="text-lg font-semibold text-gray-700">
+                  No route selected
+                </h2>
+                <p className="text-sm text-gray-500 mt-2">
+                  Select a route from the left to see stops, schedule and live buses.
                 </p>
               </div>
             )}
