@@ -19,7 +19,7 @@ export default function App() {
   const [showTimeline, setShowTimeline] = useState(false);
 
   // Auth state
-  const [role, setRole] = useState(null);
+  const [user, setUser] = useState(null);   // ✅ store full user
   const [showSignup, setShowSignup] = useState(false);
 
   // Fetch routes
@@ -43,9 +43,9 @@ export default function App() {
   }, [selectedRouteId, routes]);
 
   // =====================
-  // Auth flow (Login / Signup with bg image)
+  // Auth flow
   // =====================
-  if (!role) {
+  if (!user) {
     const bgStyle = {
       backgroundImage:
         "url('https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d')",
@@ -54,21 +54,21 @@ export default function App() {
     };
     if (showSignup) {
       return (
-        <div
-          className="flex items-center justify-center h-screen w-screen"
-          style={bgStyle}
-        >
+        <div className="flex items-center justify-center h-screen w-screen" style={bgStyle}>
           <SignUpPage onSignUp={() => setShowSignup(false)} />
         </div>
       );
     }
     return (
-      <div
-        className="flex items-center justify-center h-screen w-screen"
-        style={bgStyle}
-      >
+      <div className="flex items-center justify-center h-screen w-screen" style={bgStyle}>
         <LoginPage
-          onLogin={(r) => setRole(r)}
+          onLogin={(u) => {
+            // ✅ Ensure a role is present, else fallback to "user"
+            if (!u?.role) {
+              u = { ...u, role: "user" };
+            }
+            setUser(u);
+          }}
           goToSignUp={() => setShowSignup(true)}
         />
       </div>
@@ -76,25 +76,19 @@ export default function App() {
   }
 
   // =====================
-  // Admin View
+  // Role Based Views
   // =====================
-  if (role === "admin") {
-    return <AdminView onLogout={() => setRole(null)} />;
+  if (user.role === "admin") {
+    return <AdminView onLogout={() => setUser(null)} />;
   }
 
-  // =====================
-  // Driver View
-  // =====================
-  if (role === "driver") {
-    return <DriverView onLogout={() => setRole(null)} />;
+  if (user.role === "driver") {
+    return <DriverView onLogout={() => setUser(null)} />;
   }
 
-  // =====================
-  // User View
-  // =====================
-  if (role === "user") {
+  if (user.role === "user") {
     return (
-      <UserView onLogout={() => setRole(null)}>
+      <UserView onLogout={() => setUser(null)}>
         <div className="flex h-screen bg-gradient-to-r from-gray-50 to-gray-100">
           {/* Left Sidebar */}
           <div className="w-80 bg-white p-6 overflow-y-auto border-r shadow-lg">
@@ -139,9 +133,7 @@ export default function App() {
               </>
             ) : (
               <div className="text-center mt-20">
-                <h2 className="text-lg font-semibold text-gray-700">
-                  No route selected
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-700">No route selected</h2>
                 <p className="text-sm text-gray-500 mt-2">
                   Select a route from the left to see stops, schedule and live buses.
                 </p>
@@ -153,5 +145,16 @@ export default function App() {
     );
   }
 
-  return null;
+  // ✅ Fallback if role is not recognized
+  return (
+    <div className="flex flex-col items-center justify-center h-screen text-gray-700">
+      <h2 className="text-xl font-bold">Unknown role</h2>
+      <button
+        onClick={() => setUser(null)}
+        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
+      >
+        Logout
+      </button>
+    </div>
+  );
 }

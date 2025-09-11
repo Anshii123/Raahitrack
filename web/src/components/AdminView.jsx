@@ -4,51 +4,44 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 export default function AdminView({ onLogout }) {
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const [busPosition, setBusPosition] = useState([28.6692, 77.4538]); // starting Ghaziabad
+  const [busPosition, setBusPosition] = useState([28.6692, 77.4538]);
   const [routePath, setRoutePath] = useState([]);
 
-  // Dummy routes
   const dummyRoutes = [
     {
       id: 1,
       properties: { route_long_name: "Ghaziabad → Kashmere Gate" },
       path: [
-        [28.6692, 77.4538], // Ghaziabad ISBT
-        [28.6435, 77.3424], // Vaishali
-        [28.6400, 77.3300], // Indirapuram
-        [28.6460, 77.3150], // Anand Vihar
-        [28.6780, 77.3010], // Seemapuri
-        [28.6750, 77.2830], // Shahdara
-        [28.6670, 77.2274], // Kashmere Gate
+        [28.6692, 77.4538],
+        [28.6435, 77.3424],
+        [28.6400, 77.3300],
+        [28.6460, 77.3150],
+        [28.6780, 77.3010],
+        [28.6750, 77.2830],
+        [28.6670, 77.2274],
       ],
     },
     {
       id: 2,
       properties: { route_long_name: "Vaishali → Connaught Place" },
       path: [
-        [28.6435, 77.3424], // Vaishali
-        [28.6289, 77.2182], // CP
+        [28.6435, 77.3424],
+        [28.6289, 77.2182],
       ],
     },
   ];
 
-  // Fake bus movement simulation
   useEffect(() => {
-    if (!selectedRoute) return;
-
+    if (!selectedRoute?.path) return;
     setRoutePath(selectedRoute.path);
     let i = 0;
     setBusPosition(selectedRoute.path[0]);
@@ -60,14 +53,13 @@ export default function AdminView({ onLogout }) {
       } else {
         clearInterval(interval);
       }
-    }, 4000); // move every 4 sec
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [selectedRoute]);
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <div className="w-1/4 bg-blue-700 text-white p-6">
         <h2 className="text-lg font-bold mb-6">Admin Dashboard</h2>
         <ul>
@@ -91,9 +83,7 @@ export default function AdminView({ onLogout }) {
         </button>
       </div>
 
-      {/* Timeline + Map Section */}
       <div className="flex-1 flex">
-        {/* Timeline Section */}
         <div className="w-2/3 border-r">
           <TimelineView
             selectedRoute={selectedRoute}
@@ -102,7 +92,6 @@ export default function AdminView({ onLogout }) {
           />
         </div>
 
-        {/* Map Section */}
         <div className="w-1/3 p-4">
           {selectedRoute ? (
             <MapContainer

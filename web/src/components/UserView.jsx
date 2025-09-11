@@ -17,7 +17,7 @@ export default function UserView({ onLogout }) {
   }, []);
 
   useEffect(() => {
-    if (!selectedRoute || !selectedRoute.geometry) return;
+    if (!selectedRoute?.geometry?.coordinates) return;
     const path = selectedRoute.geometry.coordinates.map((c) => [c[1], c[0]]);
     setRoutePath(path);
     setBusPosition(null);
@@ -28,7 +28,7 @@ export default function UserView({ onLogout }) {
       if (msg.event === "bus_update") {
         const bus = msg.data;
         if (
-          selectedRoute &&
+          selectedRoute?.properties?.route_id &&
           bus.route_id === selectedRoute.properties.route_id
         ) {
           setBusPosition([bus.lat, bus.lon]);
@@ -48,13 +48,17 @@ export default function UserView({ onLogout }) {
           className="p-3 rounded-lg text-black"
           value={selectedRoute?.properties?.route_id || ""}
           onChange={(e) =>
-            setSelectedRoute(routes.find((r) => r.properties.route_id === e.target.value))
+            setSelectedRoute(
+              routes.find(
+                (r) => r.properties?.route_id === e.target.value
+              ) || null
+            )
           }
         >
           <option value="">Select Route</option>
           {routes.map((r) => (
-            <option key={r.properties.route_id} value={r.properties.route_id}>
-              {r.properties.route_long_name || `Route ${r.properties.route_id}`}
+            <option key={r.properties?.route_id} value={r.properties?.route_id}>
+              {r.properties?.route_long_name || `Route ${r.properties?.route_id}`}
             </option>
           ))}
         </select>
@@ -69,7 +73,7 @@ export default function UserView({ onLogout }) {
 
       {/* Main Content */}
       <div className="flex-1 flex">
-        {/* Pipeline style timeline */}
+        {/* Timeline */}
         <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
           <TimelineView selectedRoute={selectedRoute} pipeline />
         </div>
